@@ -15,14 +15,15 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@kyvernitria/pi-protocol-minimal": "file:../../pi-protocol/packages/pi-protocol-minimal"
+  },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
-    "@kyvernitria/pi-protocol-minimal": "*",
     "typebox": "*"
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "*",
-    "@kyvernitria/pi-protocol-minimal": "file:../../pi-protocol/packages/pi-protocol-minimal",
     "@types/node": "^24.0.0",
     "typebox": "^1.1.34",
     "typescript": "^5.0.0"
