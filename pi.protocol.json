@@ -1,0 +1,302 @@
+{
+  "protocolVersion": "0.2.0",
+  "nodeId": "pi_tray_lite",
+  "packageId": "pi-tray-lite-extension",
+  "version": "0.1.0",
+  "purpose": "Manage local fork metadata and conservative upstream-review workflows for pi-tray-lite.",
+  "provides": [
+    {
+      "name": "tray_create_fork",
+      "description": "Create a managed local npm fork under .pi/forks and write .pi-fork-meta.json metadata.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "packageName",
+          "packageVersion",
+          "forkPath",
+          "reason"
+        ],
+        "properties": {
+          "packageName": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "string"
+          },
+          "forkPath": {
+            "type": "string",
+            "description": "Published/fork package path, e.g. @local/pkg-fork or pkg-fork"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "concerns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "benefits": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "forkNamespace": {
+            "type": "string"
+          },
+          "repoRoot": {
+            "type": "string",
+            "description": "Repository root. Defaults to the current working directory."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "success",
+          "forkName"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "forkName": {
+            "type": "string"
+          },
+          "forkPath": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "execution": {
+        "type": "handler",
+        "handler": "tray_create_fork"
+      },
+      "effects": [
+        "filesystem",
+        "network"
+      ]
+    },
+    {
+      "name": "tray_check_upstream",
+      "description": "Check whether a managed fork has upstream versions newer than the reviewed version.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "forkName"
+        ],
+        "properties": {
+          "forkName": {
+            "type": "string"
+          },
+          "repoRoot": {
+            "type": "string",
+            "description": "Repository root. Defaults to the current working directory."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": {
+        "type": "handler",
+        "handler": "tray_check_upstream"
+      },
+      "effects": [
+        "filesystem",
+        "network"
+      ]
+    },
+    {
+      "name": "tray_get_fork_status",
+      "description": "Show status for all managed forks or one fork.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "forkName": {
+            "type": "string"
+          },
+          "repoRoot": {
+            "type": "string",
+            "description": "Repository root. Defaults to the current working directory."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object"
+      },
+      "execution": {
+        "type": "handler",
+        "handler": "tray_get_fork_status"
+      },
+      "effects": [
+        "filesystem"
+      ]
+    },
+    {
+      "name": "tray_record_decision",
+      "description": "Record a review decision for an upstream change.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "forkName",
+          "changeId",
+          "decision",
+          "reason"
+        ],
+        "properties": {
+          "forkName": {
+            "type": "string"
+          },
+          "changeId": {
+            "type": "string"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "cherry_pick",
+              "extract_reimplement",
+              "implement_guidance",
+              "ignore",
+              "defer"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "repoRoot": {
+            "type": "string",
+            "description": "Repository root. Defaults to the current working directory."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "execution": {
+        "type": "handler",
+        "handler": "tray_record_decision"
+      },
+      "effects": [
+        "filesystem"
+      ]
+    },
+    {
+      "name": "tray_apply_change",
+      "description": "Conservatively apply a cherry_pick decision. Dry-run is default; no git commits or test/typecheck commands are run.",
+      "inputSchema": {
+        "type": "object",
+        "required": [
+          "forkName",
+          "changeId"
+        ],
+        "properties": {
+          "forkName": {
+            "type": "string"
+          },
+          "changeId": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "markImplemented": {
+            "type": "boolean"
+          },
+          "repoRoot": {
+            "type": "string",
+            "description": "Repository root. Defaults to the current working directory."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "execution": {
+        "type": "handler",
+        "handler": "tray_apply_change"
+      },
+      "effects": [
+        "filesystem",
+        "network"
+      ]
+    },
+    {
+      "name": "tray_health_check",
+      "description": "Validate .pi/forks metadata and local paths.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "repoRoot": {
+            "type": "string",
+            "description": "Repository root. Defaults to the current working directory."
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": [
+          "ok",
+          "timestamp",
+          "forkRoot",
+          "forksChecked",
+          "issues"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "forkRoot": {
+            "type": "string"
+          },
+          "forksChecked": {
+            "type": "number"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "execution": {
+        "type": "handler",
+        "handler": "tray_health_check"
+      },
+      "effects": [
+        "filesystem"
+      ]
+    }
+  ]
+}
