@@ -6,18 +6,39 @@
  * tray_get_fork_status, tray_record_decision, tray_apply_change,
  * tray_health_check) through the shared protocol gateway instead of
  * individual Pi tools.
+ *
+ * @kyvernitria/pi-protocol-minimal is an optional peer dep — if unavailable
+ * the extension loads silently without protocol registration.
  */
 
+import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { ensureProtocolFabric, registerProtocolManifest, type PiProtocolManifest } from "@kyvernitria/pi-protocol-minimal";
-import manifestJson from "./pi.protocol.json" with { type: "json" };
 import { createHandlers } from "./protocol/handlers.js";
 
+const _require = createRequire(import.meta.url);
+
 export default function piTrayLiteExtension(pi: ExtensionAPI): void {
-  const fabric = ensureProtocolFabric();
+  registerProtocolIfAvailable();
+}
+
+function registerProtocolIfAvailable(): void {
+  let protocolMinimal: typeof import("@kyvernitria/pi-protocol-minimal");
+  try {
+    protocolMinimal = _require("@kyvernitria/pi-protocol-minimal");
+  } catch {
+    // @kyvernitria/pi-protocol-minimal not installed — skip protocol registration.
+    return;
+  }
+
+  const manifest = JSON.parse(
+    readFileSync(new URL("./pi.protocol.json", import.meta.url), "utf8"),
+  );
+
+  const fabric = protocolMinimal.ensureProtocolFabric();
   fabric.unregister("pi_tray_lite");
-  registerProtocolManifest(fabric, {
-    manifest: manifestJson as unknown as PiProtocolManifest,
+  protocolMinimal.registerProtocolManifest(fabric, {
+    manifest,
     handlers: createHandlers(),
   });
 }

@@ -1,4 +1,5 @@
-import type { ProtocolHandler } from "@kyvernitria/pi-protocol-minimal";
+type ProtocolHandler = (input: unknown) => unknown | Promise<unknown>;
+
 import { handleTrayApply } from "../src/apply.js";
 import { createForkFromDecision } from "../src/fork-integration.js";
 import { runHealthCheck } from "../src/health-check.js";
