@@ -1,17 +1,18 @@
+/**
+ * Protocol handlers for pi-tray-lite-extension.
+ *
+ * Uses lazy dynamic imports for implementation modules so the extension loads
+ * without error even when node_modules are not installed.
+ */
+
 type ProtocolHandler = (input: unknown) => unknown | Promise<unknown>;
 
-import { handleTrayApply } from "../src/apply.js";
-import { createForkFromDecision } from "../src/fork-integration.js";
-import { runHealthCheck } from "../src/health-check.js";
-import { getForkStatus, listForks, loadForkMetadata } from "../src/metadata.js";
-import { recordDecision } from "../src/review.js";
 import type { TrayDecision } from "../src/types.js";
-import { buildEcosystemStubStatus, isStubEcosystem } from "../src/upstream-dispatch.js";
-import { checkNpmUpstream } from "../src/upstream-npm.js";
 
 export function createHandlers(): Record<string, ProtocolHandler> {
   return {
     tray_create_fork: async (input) => {
+      const { createForkFromDecision } = await import("../src/fork-integration.js");
       const params = requireRecord(input, "tray_create_fork input");
       return createForkFromDecision(
         {
@@ -33,6 +34,9 @@ export function createHandlers(): Record<string, ProtocolHandler> {
     },
 
     tray_check_upstream: async (input) => {
+      const { loadForkMetadata } = await import("../src/metadata.js");
+      const { checkNpmUpstream } = await import("../src/upstream-npm.js");
+      const { buildEcosystemStubStatus, isStubEcosystem } = await import("../src/upstream-dispatch.js");
       const params = requireRecord(input, "tray_check_upstream input");
       const meta = loadForkMetadata(requireString(params, "forkName"), repoRoot(params));
       if (meta.upstreamType === "npm") return checkNpmUpstream(meta);
@@ -41,6 +45,7 @@ export function createHandlers(): Record<string, ProtocolHandler> {
     },
 
     tray_get_fork_status: async (input) => {
+      const { loadForkMetadata, listForks, getForkStatus } = await import("../src/metadata.js");
       const params = optionalRecord(input);
       const cwd = repoRoot(params);
       const forkName = optionalString(params, "forkName");
@@ -49,6 +54,7 @@ export function createHandlers(): Record<string, ProtocolHandler> {
     },
 
     tray_record_decision: async (input) => {
+      const { recordDecision } = await import("../src/review.js");
       const params = requireRecord(input, "tray_record_decision input");
       return recordDecision(
         requireString(params, "forkName"),
@@ -60,6 +66,7 @@ export function createHandlers(): Record<string, ProtocolHandler> {
     },
 
     tray_apply_change: async (input) => {
+      const { handleTrayApply } = await import("../src/apply.js");
       const params = requireRecord(input, "tray_apply_change input");
       const message = await handleTrayApply(
         requireString(params, "forkName"),
@@ -74,6 +81,7 @@ export function createHandlers(): Record<string, ProtocolHandler> {
     },
 
     tray_health_check: async (input) => {
+      const { runHealthCheck } = await import("../src/health-check.js");
       const params = optionalRecord(input);
       return runHealthCheck(repoRoot(params));
     },
@@ -126,7 +134,7 @@ function optionalStringArray(params: Record<string, unknown>, key: string): stri
 function requireDecision(params: Record<string, unknown>): TrayDecision {
   const value = requireString(params, "decision");
   if (!["cherry_pick", "extract_reimplement", "implement_guidance", "ignore", "defer"].includes(value)) {
-    throw new Error(`decision must be one of: cherry_pick, extract_reimplement, implement_guidance, ignore, defer.`);
+    throw new Error("decision must be one of: cherry_pick, extract_reimplement, implement_guidance, ignore, defer.");
   }
   return value as TrayDecision;
 }
