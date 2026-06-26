@@ -1,11 +1,3 @@
-/**
- * pi-tray-lite-extension — protocol-only entry point.
- *
- * Bootstrap ensures @kyvernitria/pi-protocol-minimal is available for ALL
- * pi-protocol certified extensions by self-installing into node_modules.
- * First load creates the symlink; subsequent loads find it already present.
- */
-
 import { createRequire } from "node:module";
 import { existsSync, mkdirSync, readFileSync, symlinkSync } from "node:fs";
 import { homedir } from "node:os";
@@ -20,11 +12,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 function ensureProtocolMinimal(): void {
   const targetDir = join(__dirname, "node_modules", "@kyvernitria");
   const target = join(targetDir, "pi-protocol-minimal");
-
-  // If the symlink or install already exists, we're done.
   if (existsSync(target)) return;
-
-  const localRepo = join(homedir(), "Applications", "pi", "pi-protocol", "packages", "pi-protocol-minimal");
 
   const localRepo = join(homedir(), "Applications", "pi", "pi-protocol", "packages", "pi-protocol-minimal");
   if (existsSync(localRepo)) {
@@ -41,13 +29,8 @@ function ensureProtocolMinimal(): void {
 export default function piTrayLiteExtension(pi: ExtensionAPI): void {
   ensureProtocolMinimal();
   const { ensureProtocolFabric, registerProtocolManifest } = _require("@kyvernitria/pi-protocol-minimal");
-
   const manifest = JSON.parse(readFileSync(new URL("./pi.protocol.json", import.meta.url), "utf8"));
-
   const fabric = ensureProtocolFabric();
   fabric.unregister("pi_tray_lite");
-  registerProtocolManifest(fabric, {
-    manifest,
-    handlers: createHandlers(),
-  });
+  registerProtocolManifest(fabric, { manifest, handlers: createHandlers() });
 }
